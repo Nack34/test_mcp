@@ -12,5 +12,5 @@ if __name__ == "__main__":
     query = input("Consulta: ").strip()
     while(query.lower()!="exit"):
         result = agent.start(query)
-        print (f"## Resultados de la busqueda: \n\n{result}")
+        #print (f"## Resultados de la busqueda: \n\n{result}")
         query = input("Consulta: ").strip()
