@@ -1,0 +1,51 @@
+services:
+  mcp_server:
+    image: mcp_prueba
+    command: ["uv", "run", "server.py", "--server_type=sse"]
+    networks:
+      - mcp_network
+    ports:
+      - "21000:21000"
+
+  filesystem-mcp:
+    image: node:20
+    working_dir: /app
+    volumes:
+    - /home/n_ricciardi/nicolas/mcp_prueba/filesystem-mcp-test:/filesystem
+    command:
+      [
+        "npx",
+        "-y",
+        "supergateway",
+        "--stdio",
+        "npx -y @modelcontextprotocol/server-filesystem /filesystem",
+        "--port",
+        "21000",
+        "--ssePath",
+        "/sse"
+      ]
+    networks:
+      - mcp_network
+    ports:
+      - "21002:21000"
+
+  mcp_client:
+    image: mcp_prueba
+    command: ["python", "-m", "uvicorn", "ollama_client:app", "--host", "0.0.0.0", "--port", "8000"]
+    networks:
+      - mcp_network
+    depends_on:
+      - mcp_server
+      - filesystem-mcp
+    environment:
+      MCP_SERVERS: "http://mcp_server:21000/sse,http://filesystem-mcp:21000/sse"
+    ports:
+      - "21003:8000"
+
+
+      
+# Crea la red.
+networks:
+  mcp_network:
+    name: mcp_network
+    driver: bridge
