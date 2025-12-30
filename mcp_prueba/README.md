@@ -15,4 +15,5 @@
  - docker build -t mcp_prueba .
 
 ### Levantar el contenedor
- - docker compose run mcp_client
+ #- docker compose run mcp_client (No usar)
+ - docker compose up -d mcp_client

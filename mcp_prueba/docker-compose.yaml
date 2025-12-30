@@ -1,11 +1,27 @@
 services:
-  mcp_server:
+  mcp_busquedas_web:
     image: mcp_prueba
-    command: ["uv", "run", "server.py", "--server_type=sse"]
+    command: ["uv", "run", "mcp_servers/mcp_server_busquedas_web.py", "--server_type=sse"]
     networks:
       - mcp_network
     ports:
       - "21000:21000"
+
+  mcp_db:
+    image: mcp_prueba
+    command: ["uv", "run", "mcp_servers/mcp_server_db.py", "--server_type=sse"]
+    networks:
+      - mcp_network
+    ports:
+      - "21005:21000"
+
+  mcp_poema:
+    image: mcp_prueba
+    command: ["uv", "run", "mcp_servers/mcp_server_poema.py", "--server_type=sse"]
+    networks:
+      - mcp_network
+    ports:
+      - "21006:21000"
 
   filesystem-mcp:
     image: node:20
@@ -35,10 +51,12 @@ services:
     networks:
       - mcp_network
     depends_on:
-      - mcp_server
+      - mcp_busquedas_web
+      - mcp_db
+      - mcp_poema
       - filesystem-mcp
     environment:
-      MCP_SERVERS: "http://mcp_server:21000/sse,http://filesystem-mcp:21000/sse"
+      MCP_SERVERS: "http://mcp_busquedas_web:21000/sse,http://mcp_db:21000/sse,http://mcp_poema:21000/sse,http://filesystem-mcp:21000/sse"
     ports:
       - "21003:8000"
 
