@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: app
+    volumes:
+      - ./res:/app/res
+    environment:
+      - OLLAMA_URL=http://host.docker.internal:11434/api/generate
+      - MODEL=gemma3:12b
+      - PDF_DIR=/app
+      - RES_DIR=/app/res
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["python", "main.py"]
