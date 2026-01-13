@@ -5,10 +5,8 @@ services:
     volumes:
       - ./res:/app/res
     environment:
-      - OLLAMA_URL=http://host.docker.internal:11434/api/generate
-      - MODEL=gemma3:12b
+      - OLLAMA_URL=http://192.168.30.50:31134
+      - MODEL=qwen3-vl:30b
       - PDF_DIR=/app
       - RES_DIR=/app/res
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     command: ["python", "main.py"]

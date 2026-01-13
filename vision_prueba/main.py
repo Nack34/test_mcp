@@ -5,6 +5,8 @@ import tempfile
 import os
 import shutil
 import sys
+from ollama import Client
+
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL")
 MODEL = os.environ.get("MODEL")
@@ -26,24 +28,25 @@ def pdf_to_images(pdf_path, dpi=300):
         image_paths.append(img_path)
     return image_paths, tmpdir
 
-def ocr_images(image_paths, timeout=300):
-    images_b64 = [encode_image(p) for p in image_paths]
+def ocr_images(image_paths, client, timeout=300):
+    resp = client.chat(
+        model=MODEL,
+        messages=[{
+            "role": "user",
+            "content": "Extraé TODO el texto del documento. Mantené el orden de lectura y respetá saltos de línea.",
+            "images": image_paths
+        }]
+    )
+    print(resp)
+    message_content = resp.message.content 
 
-    payload = {
-        "model": MODEL,
-        "prompt": (
-            "Extraé TODO el texto del documento. "
-            "Mantené el orden de lectura y respetá saltos de línea."
-        ),
-        "images": images_b64,
-        "stream": False
-    }
+    #resp = client.generate(
+    #    model=MODEL,
+    #    prompt="Extraé TODO el texto del documento. Mantené el orden de lectura y respetá saltos de línea.",
+    #    images=image_paths
+    #)
 
-    r = requests.post(OLLAMA_URL, json=payload, timeout=timeout)
-    r.raise_for_status()
-    data = r.json()
-
-    return data.get("response", "")
+    return message_content
 
 
 def find_first_pdf(dir_path):
@@ -69,6 +72,10 @@ if __name__ == "__main__":
     out_folder = ensure_dir(os.path.join(RES_DIR, pdf_stem))
 
     image_paths, tmpdir = pdf_to_images(pdf_path)
+
+    #Setup llm Ollama
+    client = Client(host=OLLAMA_URL)
+
     try:
         # Copiamos las imágenes al folder de salida para que queden persistentes en ./res
         saved_image_paths = []
@@ -78,7 +85,7 @@ if __name__ == "__main__":
             saved_image_paths.append(dest)
 
         # Llamada OCR (usando las imágenes en memoria/temporal)
-        text = ocr_images(image_paths)
+        text = ocr_images(image_paths, client)
         # Guardamos el texto en res
         text_file = os.path.join(out_folder, f"{pdf_stem}_extracted.txt")
         with open(text_file, "w", encoding="utf-8") as f:
